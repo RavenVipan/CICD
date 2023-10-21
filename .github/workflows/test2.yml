@@ -1,0 +1,158 @@
+name: Test2
+
+on:
+  push:
+    branches: 'v[0-9].[0-9]*'
+        #1.The pipeline should be triggered whenever this is a push to a branch name with the following pattern v<digit>.<digit>. 
+jobs:
+  check-commit:
+    runs-on: ubuntu-latest        
+    steps:
+    - name: :Checkout1
+      uses: actions/checkout@v4
+    - name: Check "NORUN" commit message
+      id: check-commit
+      run: |
+         if [[ "${{ github.event.head_commit.message }}" == "#NORUN"* ]]; then
+         echo "::set-output name=skip_workflow::true"
+         else
+         echo "::set-output name=skip_workflow::false"
+         fi
+    #3.Check commit information whether begin with "#NORUN"   
+  
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ success() && needs.check-commit.outputs.skip_workflow != 'true' }}
+    needs: [check-commit]
+    steps:
+    - name: Checkout2
+      uses: actions/checkout@v2
+    - name: Build an image from Dockerfile
+      run: |
+        docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+    - name: Run Trivy vulnerability scanner
+      id: Result
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,LOW'
+    - name: Check Result and divide
+      id: result
+      run: |
+        Run Trivy scanner and save the results to a file
+        trivy --format=json --output=trivy-report.json my-image-name:${{ github.sha }}
+        if [ -s trivy-report.json ]; then
+        echo "::set-output name=trivy_fail::true"
+        else
+        echo "::set-output name=trivy_fail::false"
+        fi
+    
+    - name: Send Scan message to Slack (Failed)
+      if: steps.result.outputs.trivy_fail == 'true' 
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_CHANNEL: C05QWSVMH0S
+        SLACK_TITLE: Scan Failed
+        SLACK_MESSAGE: 'Failed trivy scan, see uploaded report.'
+
+    
+    - name: Send Scan file to Slack (Failed)
+      if: steps.result.outputs.trivy_fail == 'true'
+      uses: MeilCli/slack-upload-file@v3
+      with:
+        slack_token: ${{ secrets.DIPSA57_SECRETS }}
+        channel_id: C05QWSVMH0S
+        content: ${{ steps.Result.outputs.trivy-report-json }}
+        file_type: 'text'
+        file_name: 'ScanReport.txt'
+        title: 'Scan Report'
+
+  docker:
+    runs-on: ubuntu-latest
+    if: ${{ success() && needs.steps.result.outputs.trivy_fail == 'false'}}
+    needs: [build]
+    steps:
+      - name: Build image
+        run: docker build -t imagetags:${{ github.sha }} 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERUSERNAME_WORKFLOWCA }}
+          password: ${{ secrets.DOCKERTOKEN_WORKFLOWCA }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: imagetags/app:latest
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.1.1
+  
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.1.0
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+  
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2.1.0
+        with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.PEROSONALDOKEN }}
+  
+      - id: docker_meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+            images: ghcr.io/sigstore/sample-honk
+            tags: type=sha,format=long
+  
+      - name: Build and Push container images
+        uses: docker/build-push-action@v4.0.0
+        id: build-and-push
+        with:
+            platforms: linux/amd64,linux/arm/v7,linux/arm64
+            push: true
+            tags: ${{ steps.docker_meta.outputs.tags }}
+  
+        
+      - name: Sign image with a key
+        run: |
+            cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${TAGS}@${DIGEST}"
+        env:
+            TAGS: ${{ steps.docker_meta.outputs.tags }}
+            COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+            COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+            DIGEST: ${{ steps.build-and-push.outputs.digest }}
+  
+      - name: Sign the images with GitHub OIDC Token
+        env:
+            DIGEST: ${{ steps.build-and-push.outputs.digest }}
+            TAGS: ${{ steps.docker_meta.outputs.tags }}
+        run: cosign sign --yes "${TAGS}@${DIGEST}"
+      
+      - name: Send Scan message to Slack (Succeed)
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: C05QWSVMH0S
+          SLACK_TITLE: Success
+          SLACK_MESSAGE: ' '
+ 
+    
+
+
+         
+      
+
+
+
+       
+
+
