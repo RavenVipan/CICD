@@ -52,7 +52,7 @@ jobs:
         fi
     
     - name: Send Scan message to Slack (Failed)
-      if: steps.result.outputs.trivy_fail == 'true' 
+      if: steps.result.outputs.trivy_fail 
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_CHANNEL: C05QWSVMH0S
@@ -61,7 +61,7 @@ jobs:
 
     
     - name: Send Scan file to Slack (Failed)
-      if: steps.result.outputs.trivy_fail == 'true'
+      if: steps.result.outputs.trivy_fail
       uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ secrets.DIPSA57_SECRETS }}
