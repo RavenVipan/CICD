@@ -97,7 +97,10 @@ jobs:
         env:
             DIGEST: ${{ steps.build-and-push.outputs.digest }}
             TAGS: ${{ steps.docker_meta.outputs.tags }}
-        run: cosign sign --yes "${TAGS}@${DIGEST}"
+        run:  |
+           echo "TAGS=${TAGS}"
+           echo "DIGEST=${DIGEST}"
+           cosign sign --yes "${TAGS}@${DIGEST}"
       - name: Send Scan message to Slack (Succeed)
         uses: rtCamp/action-slack-notify@v2
         env:
