@@ -74,7 +74,7 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
-    if: ${{ success() && needs.steps.check-result.outputs.trivy_fail == 'false'}}
+    if: steps.check-result.outputs.trivy_fail == 'false'
     needs: [build]
     steps:
       - name: Build image
