@@ -56,7 +56,6 @@ jobs:
       if: steps.check-result.outputs.trivy_fail == 'true' 
       uses: rtCamp/action-slack-notify@v2
       env:
-        SLACK_CHANNEL: C05QWSVMH0S
         SLACK_TITLE: Scan Failed
         SLACK_MESSAGE: 'Failed trivy scan, see uploaded report.'
         SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }} 
