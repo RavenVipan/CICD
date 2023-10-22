@@ -43,7 +43,6 @@ jobs:
     - name: Check Result and divide
       id: check-result
       run: |
-        Run Trivy scanner and save the results to a file
         trivy --format=json --output=trivy-report.json my-image-name:${{ github.sha }}
         if [ -s trivy-report.json ]; then
         echo "::set-output name=trivy_fail::true"
