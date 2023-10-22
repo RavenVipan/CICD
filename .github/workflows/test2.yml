@@ -41,19 +41,9 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,LOW'
-    
-
-    - name: Check Result and divide
-      id: check-result
-      run: |
-        if [[ "$trivy_result" == *"No vulnerabilities found"* ]]; then
-        echo "::set-output name=trivy_fail::false"
-        else
-        echo "::set-output name=trivy_fail::true"
-        fi
-    
+   
     - name: Send Scan message to Slack (Failed)
-      if: steps.check-result.outputs.trivy_fail == 'true' 
+      if: ${{failure}} 
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_TITLE: Scan Failed
@@ -62,7 +52,7 @@ jobs:
 
     
     - name: Send Scan file to Slack (Failed)
-      if: steps.check-result.outputs.trivy_fail == 'true'
+      if: ${{failure()}}
       uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ secrets.SLACK_NOTIF }}
@@ -71,11 +61,8 @@ jobs:
         file_type: 'text'
         file_name: 'ScanReport.txt'
         title: 'Scan Report'
-
   docker:
     runs-on: ubuntu-latest
-    if: steps.check-result.outputs.trivy_fail == 'false'
-    needs: [build]
     steps:
       - name: Build image
         run: docker build -t imagetags:${{ github.sha }} 
