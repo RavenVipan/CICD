@@ -61,6 +61,7 @@ jobs:
         file_type: 'text'
         file_name: 'ScanReport.txt'
         title: 'Scan Report'
+  
   docker:
     runs-on: ubuntu-latest
     steps:
@@ -73,11 +74,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: imagetags/app:latest
+          tags: ravencorax/app:${{ github.sha }}
+      
+      
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.1.1
   
