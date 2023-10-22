@@ -59,6 +59,7 @@ jobs:
         SLACK_CHANNEL: C05QWSVMH0S
         SLACK_TITLE: Scan Failed
         SLACK_MESSAGE: 'Failed trivy scan, see uploaded report.'
+        SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }} 
 
     
     - name: Send Scan file to Slack (Failed)
