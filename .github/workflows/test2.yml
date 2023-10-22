@@ -30,6 +30,7 @@ jobs:
     - name: Build an image from Dockerfile
       run: |
         docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+   
     - name: Run Trivy vulnerability scanner
       id: ScanResult
       uses: aquasecurity/trivy-action@master
@@ -40,14 +41,15 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,LOW'
+    
+
     - name: Check Result and divide
       id: check-result
       run: |
-        trivy --format=json --output=trivy-report.json my-image-name:${{ github.sha }}
-        if [ -s trivy-report.json ]; then
-        echo "::set-output name=trivy_fail::true"
-        else
+        if [[ "$trivy_result" == *"No vulnerabilities found"* ]]; then
         echo "::set-output name=trivy_fail::false"
+        else
+        echo "::set-output name=trivy_fail::true"
         fi
     
     - name: Send Scan message to Slack (Failed)
