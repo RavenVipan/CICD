@@ -44,7 +44,7 @@ jobs:
    
     - name: Send Scan message to Slack (Failed)
       if: ${{failure()}} 
-      uses: rtCamp/action-slack-notify@v2
+      uses: rtCamp/action-slack-notify@v2 
       env:
         SLACK_TITLE: Scan Failed
         SLACK_MESSAGE: 'Failed trivy scan, see uploaded report.'
