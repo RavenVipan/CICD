@@ -55,8 +55,8 @@ jobs:
       if: ${{failure()}}
       uses: MeilCli/slack-upload-file@v3
       with:
-        slack_token: ${{ secrets.SLACK_NOTIF }}
-        channel_id: C05QWSVMH0S
+        slack_token: ${{ secrets.SLACK_UPLOAD }}
+        channel_id: ${{ secrets.SLACK_CHANNELID }}
         content: ${{ steps.ScanResult.outputs.trivy-report-json }}
         file_type: 'text'
         file_name: 'ScanReport.txt'
