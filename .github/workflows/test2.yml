@@ -58,7 +58,7 @@ jobs:
         slack_token: ${{ secrets.SLACK_UPLOAD }}
         channel_id: ${{ secrets.SLACK_CHANNELID }}
         content: ${{ steps.ScanResult.outputs.trivy-report-json }}
-        file_type: 'text'
+        file_type: 'txt'
         file_name: 'ScanReport.txt'
         title: 'Scan Report'
   
@@ -115,7 +115,13 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_TITLE: Success
-          SLACK_MESSAGE: ' '
+          SLACK_MESSAGE: |
+                        Name: ZHU YIWEN
+                        Matriculation number:A0285877A
+                        Email Adress: e1221689@u.nus.edu
+                        Repositry:${{ github.event.repository.html }}
+                        Dockerhub URL: ${{ secrets.DOCKER_URL }}
+          
           SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }} 
  
     
