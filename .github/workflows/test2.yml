@@ -117,6 +117,7 @@ jobs:
           SLACK_CHANNEL: C05QWSVMH0S
           SLACK_TITLE: Success
           SLACK_MESSAGE: ' '
+          SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }} 
  
     
 
