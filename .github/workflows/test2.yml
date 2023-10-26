@@ -41,9 +41,11 @@ jobs:
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+        scan-type: 'fs'
+        ouput: 'table.txt'
         format: 'table'
         exit-code: '1'
-        ignore-unfixed: true
+        ignore-unfixed: false
         vuln-type: 'os,library'
         severity: 'CRITICAL,LOW'
           
