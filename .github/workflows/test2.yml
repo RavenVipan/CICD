@@ -1,4 +1,4 @@
-name: Test2
+name: CICD workflow
 
 on:
   push:
@@ -41,80 +41,69 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+    
+    - name: Save Result
+      if: ${{failure()}}
+      run: mv table.txt docs/
+    
+    - name: Print Result
+      if: ${{failure()}}
+      run: cat docs/table.text
    
     - name: Send Scan message to Slack (Failed)
       if: ${{failure()}} 
       uses: rtCamp/action-slack-notify@v2 
       env:
         SLACK_TITLE: Scan Failed
-        SLACK_MESSAGE: 'Failed trivy scan, see uploaded report.'
-        SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }} 
-
+        SLACK_MESSAGE: |
+          Name: ZHU YIWEN
+          Result:Failed trivy scan, see uploaded report.
+        SLACK_WEBHOOK: ${{ secrets.SLACK_NOTIF }}    
     
     - name: Send Scan file to Slack (Failed)
-      if: ${{failure()}}
+      if: ${{ failure() }}
       uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ secrets.SLACK_UPLOAD }}
         channel_id: ${{ secrets.SLACK_CHANNELID }}
-        content: ${{ steps.ScanResult.outputs.trivy-report-json }}
-        file_type: 'txt'
-        file_name: 'ScanReport.txt'
-        title: 'Scan Report'
+        
+        file_path: 'docs/table.txt'
+        title: 'Scan Report by ZHU YIWEN '
+        initial_comment: 'post by slack-upload-file'
   
-  docker:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.1.2
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
+ 
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@v3.1.2
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        id: build-and-push
-        uses: docker/build-push-action@v5
-        with:
+    - name: Build and push
+      id: build-and-push
+      uses: docker/build-push-action@v5
+      with:
           push: true
           tags: ravencorax/app:${{ github.sha }}
-  
-      - id: docker_meta
-        uses: docker/metadata-action@v4.4.0
-        with:
-            images: ravencorax/app:${{ github.sha }}
-            tags: type=sha,format=long
 
-      - name: Sign the images with GitHub OIDC Token
-        env:
-            DIGEST: ${{ steps.build-and-push.outputs.digest }}
-            TAGS: ${{ steps.docker_meta.outputs.tags }}
-        run: 
-           echo "TAGS=${TAGS}"
-           echo "DIGEST=${DIGEST}"
-           cosign sign --yes "${TAGS}@${DIGEST}"
      
-      - name: Sign image with a key
-        run: 
+    - name: Sign image with a key
+      run: 
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${TAGS}@${DIGEST}"
-        env:
+      env:
           TAGS: ravencorax/app:${{ github.sha }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
      
-      - name: Send Scan message to Slack (Succeed)
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_TITLE: Success
+    - name: Send Scan message to Slack (Succeed)
+      uses: rtCamp/action-slack-notify@v2
+      env:
+          SLACK_TITLE: Image Built and Pushed
           SLACK_MESSAGE: |
                         Name: ZHU YIWEN
                         Matriculation number:A0285877A
