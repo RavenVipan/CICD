@@ -71,7 +71,6 @@ jobs:
       with:
         slack_token: ${{ secrets.SLACK_UPLOAD }}
         channel_id: ${{ secrets.SLACK_CHANNELID }}
-        
         file_path: 'docs/table.txt'
         title: 'Scan Report by ZHU YIWEN '
         initial_comment: 'post by slack-upload-file'
