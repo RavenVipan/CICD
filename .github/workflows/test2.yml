@@ -41,14 +41,18 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
-    
+    - name: Create table
+      run: |
+          mkdir -p docs
+          echo "" docs/table.txt
+          
     - name: Save Result
       if: ${{failure()}}
       run: mv table.txt docs/
     
     - name: Print Result
       if: ${{failure()}}
-      run: cat docs/table.text
+      run: cat docs/table.txt
    
     - name: Send Scan message to Slack (Failed)
       if: ${{failure()}} 
