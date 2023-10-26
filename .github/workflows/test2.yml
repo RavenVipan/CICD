@@ -31,6 +31,11 @@ jobs:
       run: |
         docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
    
+    - name: Create Directory
+      run: |
+          mkdir -p docs
+          echo "" docs/table.txt
+   
     - name: Run Trivy vulnerability scanner
       id: ScanResult
       uses: aquasecurity/trivy-action@master
@@ -41,10 +46,6 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
-    - name: Create table
-      run: |
-          mkdir -p docs
-          echo "" docs/table.txt
           
     - name: Save Result
       if: ${{failure()}}
